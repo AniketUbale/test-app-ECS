@@ -1,8 +1,7 @@
-version: 0.2
-
 phases:
-    commands:
-      - echo Installing nginx
+  install:
+    runtime-versions:
+      nodejs: 16 
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -21,4 +20,3 @@ phases:
       - printf '[{"name":"nginx-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
-
