@@ -1,22 +1,37 @@
+version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 16 
+      nodejs: 18
+    commands:
+      - npm install
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 891376990975.dkr.ecr.ap-south-1.amazonaws.com)
+      - echo Logging in to Amazon ECR....
+      - aws --version
+      # update the following line with your own region
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 891376990975.dkr.ecr.ap-south-1.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
       - REPOSITORY_URI=891376990975.dkr.ecr.ap-south-1.amazonaws.com/test-app
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
   build:
     commands:
+      - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      # update the following line with the name of your own ECR repository
+      - docker build -t $REPOSITORY_URI:latest .
+      # update the following line with the URI of your own ECR repository (view the Push Commands in the console)
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo Pushing the Docker image to ECR...
+      - echo Build completed on `date`
+      - echo pushing to repo
+      # update the following line with the URI of your own ECR repository
+      - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"nginx-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      #- printf '[{"ImageURI":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
 artifacts:
-  files: imagedefinitions.json
+  files:
+    - imageDetail.json
