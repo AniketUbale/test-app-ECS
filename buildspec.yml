@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nginx:
+      docker: 18
     commands:
       - echo Installing nginx
   pre_build:
